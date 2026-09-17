@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dhamini Crackers - Ayyanar Pyrotech</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #FFF8EC;
+    --card: #FFFDF8;
+    --border: #F0DDB8;
+    --ink: #241207;
+    --muted: #8A6F3A;
+    --accent: #C21807;
+    --gold: #B8860B;
+  }
+  * { box-sizing: border-box; }
+  button, input, select { font: inherit; color: inherit; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .header { border-bottom: 1px solid var(--border); background: var(--card); }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto; padding: 18px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo { display: flex; align-items: baseline; gap: 8px; }
+  .logo span.name { font-size: 19px; font-weight: 800; }
+  .logo span.tag { font-size: 12px; color: var(--muted); margin-left: 4px; }
+  .cart-pill {
+    display: flex; align-items: center; gap: 8px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 999px; padding: 8px 16px;
+    font-weight: 600; cursor: pointer;
+  }
+  .cart-pill:hover { background: #FBEFD6; }
+  .admin-btn {
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 14px; font-weight: 600; cursor: pointer; font-size: 14px; margin-right: 10px;
+  }
+  .admin-btn:hover { background: #FBEFD6; }
+  .admin-btn.unlocked { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .cart-badge {
+    background: var(--accent); color: #fff; border-radius: 999px; font-size: 12px;
+    font-weight: 700; padding: 2px 8px; display: none;
+  }
+  .hero { max-width: 1100px; margin: 0 auto; padding: 28px 24px 6px; }
+  .hero h1 { font-size: 27px; font-weight: 800; margin: 0 0 6px; }
+  .hero p { color: var(--muted); margin: 0; font-size: 14px; }
+  .discount-banner {
+    max-width: 1100px; margin: 14px auto 0; padding: 0 24px;
+  }
+  .discount-banner .pill {
+    display: inline-block; background: linear-gradient(135deg,#C21807,#8B0000);
+    color: #FFD966; font-weight: 800; font-size: 14px; padding: 8px 18px;
+    border-radius: 999px; letter-spacing: .02em;
+  }
+  .category-section { max-width: 1100px; margin: 0 auto; padding: 22px 24px 4px; }
+  .category-title {
+    font-size: 16px; font-weight: 800; color: var(--accent); text-transform: uppercase;
+    letter-spacing: .04em; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--border);
+  }
+  .grid {
+    max-width: 1100px; margin: 0 auto; padding: 0 24px 8px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .emoji { font-size: 30px; }
+  .name { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+  .unit { color: var(--muted); font-size: 12px; }
+  .price-row { display: flex; align-items: baseline; gap: 8px; }
+  .mrp { color: var(--muted); font-size: 13px; text-decoration: line-through; }
+  .price { font-weight: 800; font-size: 17px; color: var(--accent); }
+  .price-input {
+    width: 70px; font-weight: 800; font-size: 15px; color: var(--accent);
+    border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px;
+  }
+  .mrp-input {
+    width: 66px; font-size: 13px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 6px; padding: 3px 6px;
+  }
+  .name-input {
+    width: 100%; font-weight: 700; font-size: 14px; border: 1px solid var(--border);
+    border-radius: 6px; padding: 3px 6px; box-sizing: border-box; margin-bottom: 4px;
+  }
+  .emoji-input {
+    width: 52px; font-size: 24px; text-align: center; border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px;
+  }
+  .unit-input {
+    width: 100%; font-size: 12px; border: 1px solid var(--border); border-radius: 6px;
+    padding: 3px 6px; box-sizing: border-box; color: var(--muted);
+  }
+  .edit-icon {
+    font-size: 12px; cursor: pointer; color: var(--muted); background: #fff;
+    border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px;
+  }
+  .edit-icon:hover { background: #FBEFD6; }
+  .add-btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 9px 0; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+  .add-btn:hover { opacity: 0.92; }
+  .stepper {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid var(--border); border-radius: 10px; padding: 4px 8px;
+  }
+  .step-btn {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; font-weight: 700; cursor: pointer; font-size: 15px;
+  }
+  .step-btn:hover { background: #FBEFD6; }
+  .qty { font-weight: 700; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(36,18,7,0.45); display: none; z-index: 40; }
+  .overlay.open { display: block; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: 380px; max-width: 92vw;
+    background: var(--bg); z-index: 50; transform: translateX(100%); transition: transform 0.25s ease;
+    display: flex; flex-direction: column; border-left: 1px solid var(--border);
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head {
+    padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex;
+    justify-content: space-between; align-items: center; background: var(--card);
+  }
+  .drawer-head h2 { margin: 0; font-size: 18px; }
+  .close-btn { border: none; background: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+  .empty-cart { color: var(--muted); font-size: 14px; text-align: center; margin-top: 40px; }
+  .line-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .line-emoji { font-size: 20px; }
+  .line-info { flex: 1; }
+  .line-name { font-weight: 600; font-size: 13.5px; }
+  .line-sub { color: var(--muted); font-size: 11.5px; }
+  .line-total { font-weight: 700; font-size: 14px; min-width: 56px; text-align: right; }
+  .drawer-foot { padding: 18px 20px; border-top: 1px solid var(--border); background: var(--card); }
+  .total-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 17px; margin-bottom: 14px; }
+  .bill-meta {
+    background: #fff; border: 1px dashed var(--border); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; color: var(--muted); margin-bottom: 12px;
+  }
+  .bill-meta .shop-name { font-size: 14px; font-weight: 800; color: var(--ink); text-align: center; padding: 2px 0 2px; }
+  .bill-meta .shop-address {
+    font-size: 11px; color: var(--muted); text-align: center; line-height: 1.4;
+    padding: 0 0 6px; border-bottom: 1px dashed var(--border); margin-bottom: 6px;
+  }
+  .bill-meta .row { display: flex; justify-content: space-between; padding: 1px 0; }
+  .bill-meta .row span:last-child { color: var(--ink); font-weight: 600; }
+  #print-invoice { display: none; }
+  @media print {
+    body > *:not(#print-invoice) { display: none !important; }
+    #print-invoice { display: block !important; position: static; width: 100%; padding: 24px; font-family: Arial, sans-serif; color: #000; }
+    #print-invoice h2 { text-align: center; margin: 0 0 4px; }
+    #print-invoice .pi-address { text-align: center; font-size: 12px; margin-bottom: 12px; }
+    #print-invoice .pi-row { display: flex; justify-content: space-between; font-size: 13px; margin: 2px 0; }
+    #print-invoice table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    #print-invoice th, #print-invoice td { border-bottom: 1px solid #ccc; text-align: left; padding: 4px 6px; font-size: 13px; }
+    #print-invoice th:last-child, #print-invoice td:last-child { text-align: right; }
+    #print-invoice .pi-total { text-align: right; font-weight: 700; font-size: 15px; margin-top: 10px; }
+  }
+  .history-link { width: 100%; background: none; border: none; color: var(--muted); font-size: 12px; text-decoration: underline; cursor: pointer; margin-top: 8px; }
+  .history-modal { position: fixed; inset: 0; background: rgba(36,18,7,0.55); display: none; align-items: center; justify-content: center; z-index: 65; }
+  .history-modal.open { display: flex; }
+  .history-box { background: var(--card); border-radius: 16px; padding: 22px; width: 360px; max-width: 90vw; max-height: 70vh; display: flex; flex-direction: column; }
+  .history-box h3 { margin: 0 0 4px; font-size: 17px; }
+  .history-note { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .history-list { overflow-y: auto; flex: 1; }
+  .history-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+  .history-item .h-top { display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 2px; }
+  .history-item .h-sub { color: var(--muted); font-size: 11px; }
+  .history-empty { color: var(--muted); font-size: 13px; text-align: center; margin-top: 20px; }
+  .pay-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 12px 0; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .pay-btn:disabled { background: #d9bfa3; cursor: not-allowed; }
+  .pay-modal { position: fixed; inset: 0; background: rgba(36,18,7,0.55); display: none; align-items: center; justify-content: center; z-index: 60; }
+  .pay-modal.open { display: flex; }
+  .pay-box { background: var(--card); border-radius: 16px; padding: 28px; width: 320px; max-width: 90vw; text-align: center; }
+  .pay-box h3 { margin: 0 0 4px; font-size: 18px; }
+  .pay-amount { font-size: 26px; font-weight: 800; color: var(--accent); margin: 6px 0 16px; }
+  #qr-holder { display: flex; justify-content: center; margin-bottom: 14px; }
+  .payee { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .pay-invoice-line { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .upi-row { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .copy-btn { border: 1px solid var(--border); background: #fff; border-radius: 6px; font-size: 12px; padding: 2px 8px; cursor: pointer; }
+  .bank-line { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .done-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 10px 0; font-weight: 700; cursor: pointer; margin-bottom: 8px; }
+  .cancel-btn { width: 100%; background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; }
+  .admin-modal { position: fixed; inset: 0; background: rgba(36,18,7,0.55); display: none; align-items: center; justify-content: center; z-index: 70; }
+  .admin-modal.open { display: flex; }
+  .admin-box { background: var(--card); border-radius: 16px; padding: 28px; width: 300px; max-width: 90vw; text-align: center; }
+  .admin-box h3 { margin: 0 0 16px; font-size: 17px; }
+  .admin-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 6px; box-sizing: border-box; }
+  .password-field { position: relative; }
+  .password-field .admin-input { padding-right: 40px; }
+  .eye-toggle { position: absolute; right: 8px; top: 8px; background: none; border: none; cursor: pointer; font-size: 16px; padding: 4px; line-height: 1; color: var(--muted); }
+  .reset-note { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5; }
+  .admin-error { color: var(--accent); font-size: 12px; min-height: 16px; margin-bottom: 10px; }
+  .forgot-link { width: 100%; background: none; border: none; color: var(--accent); font-size: 12px; text-decoration: underline; cursor: pointer; margin-top: 10px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; z-index: 80; display: none; }
+  .toast.show { display: block; }
+  .add-item-card {
+    background: var(--card); border: 2px dashed var(--border); border-radius: 14px; padding: 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; color: var(--muted); font-weight: 700; min-height: 150px;
+  }
+  .add-item-card:hover { background: #FBEFD6; color: var(--accent); border-color: var(--accent); }
+  .add-item-card .plus { font-size: 28px; line-height: 1; }
+  .item-modal { position: fixed; inset: 0; background: rgba(36,18,7,0.55); display: none; align-items: center; justify-content: center; z-index: 70; }
+  .item-modal.open { display: flex; }
+  .item-box { background: var(--card); border-radius: 16px; padding: 26px; width: 320px; max-width: 90vw; }
+  .item-box h3 { margin: 0 0 16px; font-size: 17px; text-align: center; }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--muted); margin: 10px 0 4px; }
+  .item-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+  .item-error { color: var(--accent); font-size: 12px; min-height: 16px; margin-top: 8px; }
+  .reset-checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 12px; text-align: left; }
+  .reset-checkbox-row input { margin-top: 2px; }
+  @media (max-width: 480px) {
+    .header-inner { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
+    .logo { width: 100%; }
+    .logo span.tag { display: block; margin-left: 0; margin-top: 2px; }
+    .header-inner > div:last-child { width: 100%; justify-content: space-between; }
+  }
+</style>
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc,
+    collection, query, orderBy, limit, getDocs,
+    runTransaction, writeBatch
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFxIFfgtTYT8vb42rPIQ-eJClzm73xttw",
+    authDomain: "freshmeat-6bfd0.firebaseapp.com",
+    projectId: "freshmeat-6bfd0",
+    storageBucket: "freshmeat-6bfd0.firebasestorage.app",
+    messagingSenderId: "329301869183",
+    appId: "1:329301869183:web:5145e6b73cc5a85e85b54a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // TESTING: reusing FreshMeat's admin credentials and phone number for now,
+  // as instructed. SHOP_ID is unique to this deployment so its Firestore
+  // data (products/bills/invoices/trial) never mixes with customer1's.
+  const ADMIN_EMAIL = "sumathi17f@gmail.com";
+  const SHOP_ID = "firecrackers1"; // unique per deployment — change if this becomes a distinct shop later
+  window.SHOP_ID = SHOP_ID;
+
+  window.firebaseAdminSignIn = async function (enteredPassword) {
+    return signInWithEmailAndPassword(auth, ADMIN_EMAIL, enteredPassword);
+  };
+  window.firebaseSendPasswordReset = async function () {
+    return sendPasswordResetEmail(auth, ADMIN_EMAIL);
+  };
+  window.ADMIN_EMAIL_DISPLAY = ADMIN_EMAIL;
+
+  window.fetchSharedProducts = async function () {
+    const ref = doc(db, "shopProducts", SHOP_ID);
+    const snap = await getDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  };
+  window.saveSharedProducts = async function (productsArray, nextAddedAtValue) {
+    const ref = doc(db, "shopProducts", SHOP_ID);
+    await setDoc(ref, { products: productsArray, nextAddedAt: nextAddedAtValue, updatedAt: Date.now() });
+  };
+
+  window.getNextInvoiceNumber = async function (shopId) {
+    const ref = doc(db, "shopMeta", shopId);
+    const nextValue = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      const current = snap.exists() && typeof snap.data().invoiceCounter === "number" ? snap.data().invoiceCounter : 0;
+      const next = current + 1;
+      tx.set(ref, { invoiceCounter: next }, { merge: true });
+      return next;
+    });
+    return nextValue;
+  };
+
+  window.saveBillToCloud = async function (shopId, billEntry) {
+    const ref = doc(collection(db, "shopBills", shopId, "invoices"), billEntry.no);
+    await setDoc(ref, { ...billEntry, savedAt: Date.now() });
+  };
+  window.fetchBillHistory = async function (shopId, take) {
+    const q = query(collection(db, "shopBills", shopId, "invoices"), orderBy("savedAt", "desc"), limit(take || 200));
+    const snaps = await getDocs(q);
+    return snaps.docs.map((d) => d.data());
+  };
+  window.resetBillHistoryCloud = async function (shopId) {
+    const q = query(collection(db, "shopBills", shopId, "invoices"));
+    const snaps = await getDocs(q);
+    const batch = writeBatch(db);
+    snaps.docs.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    await setDoc(doc(db, "shopMeta", shopId), { invoiceCounter: 0 }, { merge: true });
+  };
+</script>
+<script type="module" src="freshmeat-paywall.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span style="font-size:22px;">🎆</span>
+      <span class="name">Dhamini Crackers</span>
+      <span class="tag">· Ayyanar Pyrotech · pay by UPI</span>
+    </div>
+    <div style="display:flex; align-items:center;">
+      <button class="admin-btn" id="export-btn" onclick="exportToExcel()" style="display:none;">⬇️ Export</button>
+      <button class="admin-btn" id="restore-btn" onclick="document.getElementById('restore-file-input').click()" style="display:none;">⬆️ Restore</button>
+      <button class="admin-btn" id="reset-invoice-btn" onclick="openInvoiceResetModal()" style="display:none;">🗑️ Reset Invoices</button>
+      <input type="file" id="restore-file-input" accept=".xlsx" style="display:none;" onchange="handleRestoreFile(event)" />
+      <button class="admin-btn" id="admin-btn" onclick="toggleAdmin()">🔒 Admin</button>
+      <div class="cart-pill" onclick="openDrawer()">
+        🛒 Cart
+        <span class="cart-badge" id="cart-badge">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Whole Sale &amp; Retail Dealers in Fireworks Crackers</h1>
+  <p>Veerapandiyapuram, Sattur, Near Tollgate, Sivakasi Main Road · Cont: 96007 57962, 86800 57962</p>
+</div>
+<div class="discount-banner"><span class="pill">🎇 80% OFF on every item — Deepavali Combo Offer</span></div>
+
+<div id="catalog"></div>
+
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h2>Your cart</h2>
+    <button class="close-btn" onclick="closeDrawer()">✕</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-foot">
+    <div class="bill-meta" id="bill-meta"></div>
+    <div class="total-row">
+      <span>Total</span>
+      <span id="drawer-total">₹0</span>
+    </div>
+    <button class="pay-btn" id="pay-trigger" onclick="openPayModal()" disabled>Proceed to pay</button>
+    <button class="history-link" id="history-link-btn" onclick="openHistoryModal()" style="display:none;">View bill history</button>
+  </div>
+</div>
+
+<div class="pay-modal" id="pay-modal">
+  <div class="pay-box">
+    <h3>Pay with any UPI app</h3>
+    <div class="pay-amount" id="pay-amount">₹0</div>
+    <div class="pay-invoice-line" id="pay-invoice-no"></div>
+    <div id="qr-holder"></div>
+    <div class="payee" id="payee-name"></div>
+    <div class="upi-row">
+      <span id="upi-id-text"></span>
+      <button class="copy-btn" onclick="copyUpi()">Copy</button>
+    </div>
+    <div class="bank-line" id="bank-line-text"></div>
+    <button class="done-btn" onclick="markPaid()">I've paid</button>
+    <button class="cancel-btn" onclick="closePayModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="pay-modal" id="delivery-modal">
+  <div class="pay-box">
+    <h3>Payment confirmed 🎉</h3>
+    <div style="color:var(--muted); font-size:14px; margin:6px 0 20px;">How would you like your order?</div>
+    <button class="done-btn" onclick="chooseDelivery('Hand Carry')">Hand Carry</button>
+    <button class="done-btn" onclick="chooseDelivery('Courier')">Courier</button>
+  </div>
+</div>
+
+<div class="admin-modal" id="admin-modal">
+  <div class="admin-box">
+    <h3>Enter admin password</h3>
+    <div class="password-field">
+      <input type="password" class="admin-input" id="admin-password-input" placeholder="Password" />
+      <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('admin-password-input', this)">👁️</button>
+    </div>
+    <div class="admin-error" id="admin-error"></div>
+    <button class="done-btn" onclick="submitAdminPassword()">Unlock</button>
+    <button class="cancel-btn" onclick="closeAdminModal()">Cancel</button>
+    <button class="forgot-link" onclick="startPasswordReset()">Forgot password? Reset via email</button>
+  </div>
+</div>
+
+<div class="admin-modal" id="reset-modal">
+  <div class="admin-box" id="reset-step-confirm">
+    <h3>Reset admin password</h3>
+    <div class="reset-note">We'll send a password reset link to the admin email on file (<span id="reset-email-mask"></span>). Open it on this device to set a new password, then come back and unlock with it.</div>
+    <div class="admin-error" id="reset-error"></div>
+    <button class="done-btn" onclick="sendPasswordReset()">Send reset email</button>
+    <button class="cancel-btn" onclick="closeResetModal()">Cancel</button>
+  </div>
+  <div class="admin-box" id="reset-step-sent" style="display:none;">
+    <h3>Check your email</h3>
+    <div class="reset-note">A reset link was sent to <span id="reset-email-sent"></span>. Follow it to set a new password, then unlock Admin here with the new one.</div>
+    <button class="done-btn" onclick="closeResetModal()">Done</button>
+  </div>
+</div>
+
+<div class="admin-modal" id="invoice-reset-modal">
+  <div class="admin-box">
+    <h3>⚠️ Reset Invoice Data</h3>
+    <div class="reset-note">
+      This will permanently erase all bill history and reset the invoice number back to 001. <strong>This cannot be undone.</strong><br><br>
+      Please export a backup (⬇️ Export) first — you will not be able to recover this data afterward.
+    </div>
+    <label class="reset-checkbox-row">
+      <input type="checkbox" id="reset-backup-confirm" />
+      <span>I have taken a backup and understand this cannot be undone.</span>
+    </label>
+    <div class="password-field">
+      <input type="password" class="admin-input" id="reset-confirm-password" placeholder="Re-enter admin password" />
+      <button type="button" class="eye-toggle" onclick="togglePasswordVisibility('reset-confirm-password', this)">👁️</button>
+    </div>
+    <div class="admin-error" id="invoice-reset-error"></div>
+    <button class="done-btn" onclick="confirmInvoiceReset()" style="background:var(--accent);">Reset Invoice Data</button>
+    <button class="cancel-btn" onclick="closeInvoiceResetModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="history-modal" id="history-modal">
+  <div class="history-box">
+    <h3>Bill history</h3>
+    <div class="history-note">Synced from the cloud — same on every device.</div>
+    <div class="history-list" id="history-list"></div>
+    <button class="cancel-btn" onclick="closeHistoryModal()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="item-modal" id="item-modal">
+  <div class="item-box">
+    <h3>Add new item</h3>
+    <div class="field-label">Emoji</div>
+    <input type="text" class="item-input" id="new-item-emoji" placeholder="🎆" maxlength="4" />
+    <div class="field-label">Name</div>
+    <input type="text" class="item-input" id="new-item-name" placeholder="e.g. Sky Shot" />
+    <div class="field-label">Category</div>
+    <input type="text" class="item-input" id="new-item-category" placeholder="e.g. Fountains" />
+    <div class="field-label">Unit</div>
+    <input type="text" class="item-input" id="new-item-unit" placeholder="e.g. 1 BOX" />
+    <div class="field-label">MRP (₹) — optional, shown struck through</div>
+    <input type="number" min="0" class="item-input" id="new-item-mrp" placeholder="e.g. 500" />
+    <div class="field-label">Offer Price (₹)</div>
+    <input type="number" min="0" class="item-input" id="new-item-price" placeholder="e.g. 100" />
+    <div class="item-error" id="item-error"></div>
+    <button class="done-btn" onclick="submitNewItem()" style="margin-top:10px;">Add item</button>
+    <button class="cancel-btn" onclick="closeAddItemModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  // ══════════════════ CATALOG (best-effort transcription from the
+  // printed price list — every item is 80% off MRP per the flyer, used as
+  // a consistency check while transcribing. VERIFY AGAINST THE PRINTED
+  // LIST BEFORE GOING LIVE WITH REAL CUSTOMERS. ══════════════════
+  const RAW_CATALOG = [
+    ["Single Sound Crackers","🧨",[
+      ["2¾\" Kuruvi",35,"1 PKT"],["3½\" Lakshmi",60,"1 PKT"],["4\" Lakshmi",85,"1 PKT"],
+      ["4\" Deluxe Lakshmi (10 Ply)",110,"1 PKT"],["4\" Deluxe Lakshmi (12 Ply)",120,"1 PKT"],
+      ["Gold Laxmi",150,"1 PKT"],["2 Sound",145,"1 PKT"],["5\" Lakshmi",225,"1 PKT"],
+      ["6\" Tiger",250,"1 PKT"],["6\" Bahubali",320,"1 PKT"],["6\" Deluxe (Jallikattu)",350,"1 PKT"],
+      ["6\" Mega Deluxe (Royal Challenge)",500,"1 PKT"]
+    ]],
+    ["Ground Chakkars","☸️",[
+      ["Ground Chakkar Big (10 pcs)",190,"1 BOX"],["Ground Chakkar Special",340,"1 BOX"],
+      ["Ground Chakkar Deluxe",620,"1 BOX"],["Ground Chakkar (Plastic Amazing Circus)",1010,"1 BOX"],
+      ["Ground Chakkar (Plastic Captain America)",900,"1 BOX"],["Wire Chakkar (5 pcs)",1100,"1 BOX"]
+    ]],
+    ["Flower Pots","🌺",[
+      ["Flower Pots Small",190,"1 BOX"],["Flower Pots Big",275,"1 BOX"],["Flower Pots Special",340,"1 BOX"],
+      ["Flower Pots Asoka",450,"1 BOX"],["Flower Pots Deluxe (5 pcs)",850,"1 BOX"],
+      ["Super Deluxe (2 pcs)",430,"1 BOX"],["Colour Koti (10 pcs)",990,"1 BOX"],
+      ["Colour Koti Deluxe",1170,"1 BOX"],["Colour Koti Moto Deluxe",2100,"1 BOX"]
+    ]],
+    ["Fountains","⛲",[
+      ["Multi Colour Giant Deluxe (10pcs)",2100,"1 BOX"],["Tricolour Fountain (5 pcs)",1100,"1 BOX"],
+      ["Tricolour Fountain Mega (5 pcs)",1300,"1 BOX"],["Colour Cone (2 pcs)",1100,"1 BOX"],
+      ["Multi Shower (5 pcs)",600,"1 BOX"],["Mega Shower",800,"1 BOX"],["Kit Kat",170,"1 BOX"],
+      ["Emu Egg",980,"1 BOX"],["Disco Shower Single Colour",600,"1 BOX"],
+      ["Colour Shower (5 Colour)",700,"1 BOX"],["Cone Ice (Popcorn) (2 pcs)",1200,"1 BOX"],
+      ["Gitar",1500,"1 BOX"],["Colour Changing Bambaram",600,"1 BOX"],["Mega Siren (2 pcs)",725,"1 BOX"],
+      ["Mega Siren (3 pcs)",950,"1 BOX"],["Photo Flash (5 pcs)",450,"1 BOX"],
+      ["Money Bank / Sound Marriage",650,"1 BOX"],["Magic Money",1240,"1 BOX"]
+    ]],
+    ["Novelties Crackers","✨",[
+      ["7\" Magic Pencil",100,"1 BOX"],["10\" Pencil",200,"1 BOX"],["Ultra Pencil (3 pcs)",400,"1 BOX"],
+      ["Star Rain Pencil",660,"1 BOX"],["18\" Pencil (10 pcs)",745,"1 BOX"],
+      ["Zee Boom Baa / Magic Pops",90,"1 BOX"],["Colour Electric Stone",90,"1 BOX"],
+      ["1½\" Twinkling Star",145,"1 BOX"],["4\" Twinkling Star",290,"1 BOX"],["Cartoon",130,"1 BOX"]
+    ]],
+    ["Bombs","💣",[
+      ["Bullet Bomb",120,"1 BOX"],["Hydro Bomb",275,"1 BOX"],["King of King Bomb",375,"1 BOX"],
+      ["Classic Bomb",550,"1 BOX"],["Adiyal 1/4 Kg",260,"1 BOX"],["Adiyal 1/2 Kg",520,"1 BOX"],
+      ["Adiyal Deluxe 1 Kg",1050,"1 BOX"],["Digital Bomb (10 pcs)",1100,"1 BOX"],
+      ["Top Star, Digital, Nuclear Bomb",1300,"1 BOX"],["Avatar Bomb (10 pcs)",1325,"1 BOX"]
+    ]],
+    ["Rockets","🚀",[
+      ["Baby Rocket",225,"1 BOX"],["Rocket Bomb",390,"1 BOX"],["Lunik Rocket",950,"1 BOX"],
+      ["Mega Two Sound Rocket (Commando) (10 pcs)",950,"1 BOX"],["Whistle Rocket (10 pcs)",925,"1 BOX"]
+    ]],
+    ["Dazzling Fountain's","💫",[
+      ["Red Bijili Normal (50 pcs)",90,"1 BOX"],["Stripped Bijili (50 pcs)",105,"1 BOX"],
+      ["Red Bijili (100 pcs)",160,"1 BOX"],["Stripped Bijili (100 pcs)",180,"1 BOX"]
+    ]],
+    ["Garlands","🎉",[
+      ["1 K",1080,"1 BOX"],["2 K",2160,"1 BOX"],["5 K",4320,"1 BOX"],["10 K",8640,"1 BOX"]
+    ]],
+    ["Sparklers","🎇",[
+      ["7 CM Electric Sparklers",65,"1 BOX"],["7 CM Colour Sparklers",70,"1 BOX"],
+      ["7 CM Green Sparklers",85,"1 BOX"],["7 CM Red Sparklers",115,"1 BOX"],
+      ["10 CM Electric Sparklers",70,"1 BOX"],["10 CM Colour Sparklers",80,"1 BOX"],
+      ["10 CM Green Sparklers",85,"1 BOX"],["10 CM Red Sparklers",110,"1 BOX"],
+      ["12 CM Electric Sparklers",145,"1 BOX"],["12 CM Colour Sparklers",155,"1 BOX"],
+      ["12 CM Green Sparklers",175,"1 BOX"],["12 CM Red Sparklers",190,"1 BOX"],
+      ["15 CM Electric Sparklers",230,"1 BOX"],["15 CM Colour Sparklers",245,"1 BOX"],
+      ["15 CM Green Sparklers",260,"1 BOX"],["15 CM Red Sparklers",300,"1 BOX"],
+      ["30 CM Electric Sparklers",230,"1 BOX"],["30 CM Colour Sparklers",245,"1 BOX"],
+      ["30 CM Green Sparklers",260,"1 BOX"],["30 CM Red Sparklers",300,"1 BOX"],
+      ["50 CM Electric Tube",825,"1 BOX"],["50 CM Colour Tube",975,"1 BOX"],
+      ["50 CM Multi Mix",1380,"1 BOX"],["Rotation Sparklers Cap",950,"1 BOX"]
+    ]],
+    ["Aerial Novelties and Comets","🎆",[
+      ["Sky Shot Crackling (5 pcs)",390,"1 BOX"],["7 Shot Colour with Sound (5 pcs)",570,"1 BOX"],
+      ["Penta Magic Multicolour (5 pcs)",600,"1 BOX"],["1¼\" Chotta Fancy",210,"1 BOX"],
+      ["2\" Fancy Multi Colour",450,"1 BOX"],["2½\" Fancy Multicolour",650,"1 BOX"],
+      ["3\" Fancy Multi Colour",1200,"1 BOX"],["3½\" Fancy Multicolour",1450,"1 BOX"],
+      ["4\" Nayagara Falls",1600,"1 BOX"],["4\" Fancy Multi Colour",1800,"1 BOX"],
+      ["5\" Fancy Multi Colour",2400,"1 BOX"],["5\" Jumbo Fancy Multicolour (2 pcs)",3700,"1 BOX"],
+      ["4\" Fancy (Double Ball)",1800,"1 BOX"],["4½\" Fancy (Triple Ball)",2790,"1 BOX"],
+      ["4\" Fancy (Seven Ball)",2940,"1 BOX"],["2\" Fancy (3 pcs)",1400,"1 BOX"]
+    ]],
+    ["Multiple Aerial Shots","🎇",[
+      ["12 Shot Rider (Squre)",700,"1 BOX"],["12 Shot Crackling",800,"1 BOX"],
+      ["12 Shot Deluxe Red & Green",900,"1 BOX"]
+    ]],
+    ["Colour Smoke Shot Series","🌈",[
+      ["Colour Smoke Shot",2750,"1 BOX"],["25 Shot Crackling",1500,"1 BOX"],
+      ["30 Shot Multi Colour",1750,"1 BOX"],["30 Shot Multi Colour Crackling",1875,"1 BOX"],
+      ["60 Shot Multi Colour",3900,"1 BOX"],["60 Shot Multicolour Crackling",4100,"1 BOX"],
+      ["120 Shot Multi Colour",7750,"1 BOX"],["120 Shot Multicolour Crackling",8250,"1 BOX"],
+      ["240 Shot Multicolour Crackling",14750,"1 BOX"],["10x10 IPL Celebration Shot",18750,"1 BOX"]
+    ]],
+    ["Colour Matches","🐍",[
+      ["Roll Cap",400,"1 BOX"],["Snake Serpent",100,"1 BOX"],["Snake Anaconda",450,"1 BOX"],
+      ["Colour Matches 5 in 1 (Pogo)",400,"1 BOX"],["Colour Matches 5 in 1 (Dora)",450,"1 BOX"],
+      ["Colour Matches 10 in 1 (Laptop)",1000,"1 BOX"]
+    ]],
+    ["New Arrivals","🆕",[
+      ["Drone",725,"1 BOX"],["Helicopter",600,"1 BOX"],["Rainbow Smoke",800,"1 BOX"],["Tin",600,"1 BOX"],
+      ["4x4 Wheel",800,"1 BOX"],["Sony Gun",850,"1 BOX"],["Teddy",270,"1 BOX"],["Pogo",190,"1 BOX"],
+      ["Wonder Tree",600,"1 BOX"],["Chin Chan (5 pcs)",1020,"1 BOX"],["Water Queen",900,"1 BOX"],
+      ["Cylinder Bomb",1050,"1 BOX"],["Lotus",900,"1 BOX"]
+    ]],
+    ["Peacock","🦚",[
+      ["Peacock Feather (5 pcs)",600,"1 BOX"],["Little Peacock",675,"1 BOX"],["Magic Peacock",800,"1 BOX"],
+      ["Peacock 5 in 1",875,"1 BOX"],["Bada Peacock",1900,"1 BOX"]
+    ]],
+    ["Gift Box","🎁",[
+      ["Diamond Pack - 25 Item",480,"—",true],["Instagram Pack - 35 Item",690,"—",true],
+      ["Silver Pack - 45 Item",990,"—",true],["Meenakshi Diwali Pack - 50 Item",1120,"—",true]
+    ]],
+    ["Deepavali Combo Offer","🎁",[
+      ["Combo 1 (36 Items)",3000,"1 COMBO",true],["Combo 2 (51 Items)",6000,"1 COMBO",true],
+      ["Combo 3 (60 Items)",7000,"1 COMBO",true]
+    ]]
+  ];
+
+  function slugifyBase(name) {
+    return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "item";
+  }
+  const PRODUCTS = [];
+  { let counter = 1; const usedIds = {};
+    RAW_CATALOG.forEach(([category, catEmoji, items]) => {
+      items.forEach(([name, mrpOrFlat, unit, isFlatPrice]) => {
+        let base = slugifyBase(name), id = base, n = 2;
+        while (usedIds[id]) { id = `${base}-${n}`; n++; }
+        usedIds[id] = true;
+        const price = isFlatPrice ? mrpOrFlat : Math.round(mrpOrFlat / 5); // 80% off, offer = MRP/5
+        const mrp = isFlatPrice ? null : mrpOrFlat;
+        PRODUCTS.push({ id, name, category, unit, price, mrp, emoji: catEmoji, addedAt: counter++ });
+      });
+    });
+  }
+
+  const UPI_ID = "sumathi17f@okhdfcbank";
+  const UPI_NAME = "Sumathi Murali";
+  const SHOP_NAME = "Dhamini Crackers - Ayyanar Pyrotech";
+  const SHOP_ADDRESS = "Veerapandiyapuram, Sattur, Near Tollgate, Sivakasi Main Road";
+  const SHOP_MOBILE = "9600169027";
+  const BANK_LINE = "";
+
+  document.getElementById("bank-line-text").textContent = BANK_LINE;
+
+  let adminUnlocked = false;
+  let nextAddedAt = Math.max(...PRODUCTS.map((p) => p.addedAt)) + 1;
+  let invoiceCounter = 1;
+  let billHistory = [];
+  let currentInvoice = null;
+  let invoiceFetchInProgress = false;
+  let pendingDeliveryBill = null;
+
+  const STORAGE_KEY = "firecrackers1-state-v1";
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ products: PRODUCTS, nextAddedAt, billHistory, invoiceCounter, cart }));
+    } catch (e) { console.warn("Could not save state:", e); }
+  }
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const state = JSON.parse(raw);
+      if (Array.isArray(state.billHistory)) billHistory = state.billHistory;
+      if (typeof state.invoiceCounter === "number") invoiceCounter = state.invoiceCounter;
+      if (state.cart && typeof state.cart === "object") Object.keys(state.cart).forEach((id) => { cart[id] = state.cart[id]; });
+    } catch (e) { console.warn("Could not load saved state:", e); }
+  }
+
+  function formatDateTime(d) {
+    const date = d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    return { date, time };
+  }
+  function makeInvoiceNo(d, seq) {
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"), day = String(d.getDate()).padStart(2, "0");
+    return `INV-${y}${m}${day}-${String(seq).padStart(3, "0")}`;
+  }
+
+  const cart = {};
+  function totalCount() { return Object.values(cart).reduce((a, b) => a + b, 0); }
+  function totalAmount() {
+    return Object.entries(cart).reduce((sum, [id, qty]) => {
+      const p = PRODUCTS.find((x) => x.id === id);
+      return sum + p.price * qty;
+    }, 0);
+  }
+  function updateBadge() {
+    const badge = document.getElementById("cart-badge");
+    const count = totalCount();
+    badge.style.display = count > 0 ? "inline-block" : "none";
+    badge.textContent = count;
+  }
+  function addOne(id) { cart[id] = (cart[id] || 0) + 1; renderCard(id); updateBadge(); renderDrawer(); saveState(); }
+  function removeOne(id) {
+    if (!cart[id]) return;
+    cart[id] -= 1; if (cart[id] <= 0) delete cart[id];
+    renderCard(id); updateBadge(); renderDrawer(); saveState();
+  }
+
+  function toggleAdmin() {
+    if (adminUnlocked) {
+      adminUnlocked = false;
+      document.getElementById("admin-btn").textContent = "🔒 Admin";
+      document.getElementById("admin-btn").classList.remove("unlocked");
+      document.getElementById("export-btn").style.display = "none";
+      document.getElementById("restore-btn").style.display = "none";
+      document.getElementById("reset-invoice-btn").style.display = "none";
+      document.getElementById("history-link-btn").style.display = "none";
+      renderCatalog();
+      return;
+    }
+    document.getElementById("admin-password-input").value = "";
+    document.getElementById("admin-error").textContent = "";
+    document.getElementById("admin-modal").classList.add("open");
+    document.getElementById("admin-password-input").focus();
+  }
+  function closeAdminModal() { document.getElementById("admin-modal").classList.remove("open"); }
+
+  async function submitAdminPassword() {
+    const entered = document.getElementById("admin-password-input").value;
+    try {
+      await window.firebaseAdminSignIn(entered);
+      adminUnlocked = true;
+      document.getElementById("admin-btn").textContent = "🔓 Admin";
+      document.getElementById("admin-btn").classList.add("unlocked");
+      document.getElementById("export-btn").style.display = "inline-block";
+      document.getElementById("restore-btn").style.display = "inline-block";
+      document.getElementById("reset-invoice-btn").style.display = "inline-block";
+      document.getElementById("history-link-btn").style.display = "block";
+      renderCatalog();
+      closeAdminModal();
+    } catch (err) {
+      document.getElementById("admin-error").textContent = "Incorrect password. Try again.";
+    }
+  }
+
+  function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
+    else { input.type = "password"; btn.textContent = "👁️"; }
+  }
+
+  function startPasswordReset() {
+    closeAdminModal();
+    document.getElementById("reset-email-mask").textContent = window.ADMIN_EMAIL_DISPLAY || "";
+    document.getElementById("reset-error").textContent = "";
+    document.getElementById("reset-step-confirm").style.display = "block";
+    document.getElementById("reset-step-sent").style.display = "none";
+    document.getElementById("reset-modal").classList.add("open");
+  }
+  function closeResetModal() { document.getElementById("reset-modal").classList.remove("open"); }
+  async function sendPasswordReset() {
+    try {
+      await window.firebaseSendPasswordReset();
+      document.getElementById("reset-email-sent").textContent = window.ADMIN_EMAIL_DISPLAY || "";
+      document.getElementById("reset-step-confirm").style.display = "none";
+      document.getElementById("reset-step-sent").style.display = "block";
+    } catch (err) {
+      document.getElementById("reset-error").textContent = "Couldn't send reset email. Try again shortly.";
+    }
+  }
+
+  function openInvoiceResetModal() {
+    document.getElementById("reset-backup-confirm").checked = false;
+    document.getElementById("reset-confirm-password").value = "";
+    document.getElementById("invoice-reset-error").textContent = "";
+    document.getElementById("invoice-reset-modal").classList.add("open");
+  }
+  function closeInvoiceResetModal() { document.getElementById("invoice-reset-modal").classList.remove("open"); }
+  async function confirmInvoiceReset() {
+    const backedUp = document.getElementById("reset-backup-confirm").checked;
+    const entered = document.getElementById("reset-confirm-password").value;
+    if (!backedUp) { document.getElementById("invoice-reset-error").textContent = "Please confirm you've taken a backup first."; return; }
+    if (!entered) { document.getElementById("invoice-reset-error").textContent = "Please re-enter your admin password."; return; }
+    try {
+      await window.firebaseAdminSignIn(entered);
+      await window.resetBillHistoryCloud(window.SHOP_ID);
+      billHistory = []; invoiceCounter = 1; currentInvoice = null;
+      saveState(); renderDrawer(); closeInvoiceResetModal();
+      showToast("Invoice history reset. Numbering restarts at 001.");
+    } catch (err) {
+      console.error(err);
+      document.getElementById("invoice-reset-error").textContent = "Incorrect password, or reset failed. Try again.";
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2000);
+  }
+
+  function priceBlockHtml(p) {
+    if (!adminUnlocked) {
+      return p.mrp
+        ? `<span class="mrp">₹${p.mrp}</span><span class="price">₹${p.price}</span>`
+        : `<span class="price">₹${p.price}</span>`;
+    }
+    return `
+      <input class="mrp-input" type="number" min="0" value="${p.mrp || ''}" id="mrp-input-${p.id}" placeholder="MRP" />
+      ₹<input class="price-input" type="number" min="0" value="${p.price}" id="input-${p.id}" />
+      <span class="edit-icon" onclick="saveItem('${p.id}')">Save</span>`;
+  }
+  function renderPriceBlock(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    document.getElementById("price-block-" + id).innerHTML = priceBlockHtml(p);
+  }
+  function renderNameBlock(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    const el = document.getElementById("name-block-" + id);
+    el.innerHTML = !adminUnlocked ? p.name : `<input class="name-input" type="text" value="${p.name}" id="name-input-${id}" />`;
+  }
+  function renderUnitBlock(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    const el = document.getElementById("unit-block-" + id);
+    el.innerHTML = !adminUnlocked ? p.unit : `<input class="unit-input" type="text" value="${p.unit}" id="unit-input-${id}" />`;
+  }
+  function renderEmojiBlock(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    const el = document.getElementById("emoji-block-" + id);
+    el.innerHTML = !adminUnlocked ? p.emoji : `<input class="emoji-input" type="text" value="${p.emoji}" id="emoji-input-${id}" maxlength="4" />`;
+  }
+
+  function saveItem(id) {
+    const nameInput = document.getElementById("name-input-" + id);
+    const unitInput = document.getElementById("unit-input-" + id);
+    const priceInput = document.getElementById("input-" + id);
+    const mrpInput = document.getElementById("mrp-input-" + id);
+    const emojiInput = document.getElementById("emoji-input-" + id);
+    const newName = nameInput.value.trim();
+    const newUnit = unitInput.value.trim();
+    const newPrice = parseFloat(priceInput.value);
+    const newMrp = mrpInput.value.trim() === "" ? null : parseFloat(mrpInput.value);
+    const newEmoji = emojiInput.value.trim() || "🎆";
+    if (!newName) { showToast("Item name can't be empty."); return; }
+    if (isNaN(newPrice) || newPrice < 0) { showToast("Enter a valid price."); return; }
+    const p = PRODUCTS.find((x) => x.id === id);
+    p.name = newName; p.unit = newUnit; p.price = newPrice; p.mrp = newMrp; p.emoji = newEmoji;
+    renderNameBlock(id); renderUnitBlock(id); renderPriceBlock(id); renderEmojiBlock(id);
+    if (cart[id]) renderDrawer();
+    persistProducts();
+    showToast("Item updated.");
+  }
+
+  function renderCard(id) {
+    const qty = cart[id] || 0;
+    const controlsEl = document.getElementById("controls-" + id);
+    controlsEl.innerHTML = qty === 0
+      ? `<button class="add-btn" onclick="addOne('${id}')">Add to cart</button>`
+      : `<div class="stepper"><button class="step-btn" onclick="removeOne('${id}')">−</button><span class="qty">${qty}</span><button class="step-btn" onclick="addOne('${id}')">+</button></div>`;
+  }
+
+  function billMetaHtml(invoice) {
+    return `
+      <div class="shop-name">${SHOP_NAME}</div>
+      <div class="shop-address">${SHOP_ADDRESS}<br>Mobile No: ${SHOP_MOBILE}</div>
+      <div class="row"><span>Invoice No.</span><span>${invoice.no}</span></div>
+      <div class="row"><span>Date</span><span>${invoice.date}</span></div>
+      <div class="row"><span>Time</span><span>${invoice.time}</span></div>`;
+  }
+
+  function renderDrawer() {
+    const body = document.getElementById("drawer-body");
+    const entries = Object.entries(cart);
+    body.innerHTML = entries.length === 0
+      ? `<div class="empty-cart">Your cart is empty.<br/>Light up your order!</div>`
+      : entries.map(([id, qty]) => {
+          const p = PRODUCTS.find((x) => x.id === id);
+          return `<div class="line-item">
+            <div class="line-emoji">${p.emoji}</div>
+            <div class="line-info"><div class="line-name">${p.name}</div><div class="line-sub">${qty} × ₹${p.price}</div></div>
+            <div class="line-total">₹${p.price * qty}</div>
+          </div>`;
+        }).join("");
+    const total = totalAmount();
+    document.getElementById("drawer-total").textContent = "₹" + total;
+    document.getElementById("pay-trigger").disabled = total === 0;
+    const metaEl = document.getElementById("bill-meta");
+    if (total === 0) { currentInvoice = null; metaEl.innerHTML = ""; return; }
+    if (currentInvoice) { metaEl.innerHTML = billMetaHtml(currentInvoice); return; }
+    if (invoiceFetchInProgress) return;
+    invoiceFetchInProgress = true;
+    metaEl.innerHTML = `<div class="shop-name">${SHOP_NAME}</div><div style="text-align:center;padding:8px 0;">Preparing invoice…</div>`;
+    (async () => {
+      const now = new Date();
+      const { date, time } = formatDateTime(now);
+      let seq;
+      try { seq = await window.getNextInvoiceNumber(window.SHOP_ID); }
+      catch (e) { console.warn("Firestore invoice number failed, local fallback:", e); seq = invoiceCounter; invoiceCounter++; }
+      invoiceFetchInProgress = false;
+      if (totalAmount() === 0) return;
+      currentInvoice = { no: makeInvoiceNo(now, seq), date, time, timestamp: now };
+      renderDrawer();
+    })();
+  }
+
+  function openDrawer() { document.getElementById("drawer").classList.add("open"); document.getElementById("overlay").classList.add("open"); }
+  function closeDrawer() { document.getElementById("drawer").classList.remove("open"); document.getElementById("overlay").classList.remove("open"); }
+
+  async function paywallAllows() {
+    if (typeof window.fmCheckAccessBlocking !== "function") return true;
+    return window.fmCheckAccessBlocking();
+  }
+
+  async function openPayModal() {
+    const total = totalAmount();
+    if (total === 0) return;
+    if (!currentInvoice) { showToast("Still preparing your invoice — one moment…"); return; }
+    if (!(await paywallAllows())) return;
+    document.getElementById("pay-amount").textContent = "₹" + total;
+    document.getElementById("pay-invoice-no").textContent = currentInvoice ? currentInvoice.no : "";
+    document.getElementById("payee-name").textContent = UPI_NAME;
+    document.getElementById("upi-id-text").textContent = UPI_ID;
+    const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${total}&cu=INR&tn=${encodeURIComponent(currentInvoice ? currentInvoice.no : "")}`;
+    const holder = document.getElementById("qr-holder");
+    holder.innerHTML = "";
+    new QRCode(holder, { text: upiUrl, width: 180, height: 180, colorDark: "#241207", colorLight: "#FFFDF8" });
+    document.getElementById("pay-modal").classList.add("open");
+  }
+  function closePayModal() { document.getElementById("pay-modal").classList.remove("open"); }
+
+  async function markPaid() {
+    if (!(await paywallAllows())) { closePayModal(); return; }
+    if (currentInvoice) {
+      const items = Object.entries(cart).map(([id, qty]) => {
+        const p = PRODUCTS.find((x) => x.id === id);
+        return { name: p.name, unit: p.unit, qty, price: p.price };
+      });
+      const billEntry = { no: currentInvoice.no, date: currentInvoice.date, time: currentInvoice.time, total: totalAmount(), items, deliveryMethod: null };
+      try { await window.saveBillToCloud(window.SHOP_ID, billEntry); }
+      catch (e) { console.warn("Could not save bill to Firestore:", e); showToast("Payment recorded locally, but couldn't sync online. Check connection."); }
+      billHistory.unshift(billEntry);
+      pendingDeliveryBill = billEntry;
+    }
+    for (const id of Object.keys(cart)) { delete cart[id]; renderCard(id); }
+    currentInvoice = null;
+    updateBadge(); renderDrawer(); closePayModal(); saveState();
+    showToast("Payment recorded.");
+    if (pendingDeliveryBill) document.getElementById("delivery-modal").classList.add("open");
+    else closeDrawer();
+  }
+
+  function printInvoice(billEntry) {
+    const rows = billEntry.items.map((it) => `<tr><td>${it.name}${it.unit ? ` <span style="color:#888;">(${it.unit})</span>` : ""}</td><td>${it.qty}</td><td>₹${it.price}</td><td>₹${it.qty * it.price}</td></tr>`).join("");
+    document.getElementById("print-invoice").innerHTML = `
+      <h2>${SHOP_NAME}</h2>
+      <div class="pi-address">${SHOP_ADDRESS}<br>Mobile No: ${SHOP_MOBILE}</div>
+      <div class="pi-row"><span>Invoice No.</span><span>${billEntry.no}</span></div>
+      <div class="pi-row"><span>Date</span><span>${billEntry.date}</span></div>
+      <div class="pi-row"><span>Time</span><span>${billEntry.time}</span></div>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="pi-total">Total: ₹${billEntry.total}</div>`;
+    const originalTitle = document.title;
+    document.title = `${SHOP_NAME} - ${billEntry.no} - ${billEntry.date}`;
+    window.print();
+    document.title = originalTitle;
+  }
+
+  function chooseDelivery(method) {
+    if (pendingDeliveryBill) {
+      pendingDeliveryBill.deliveryMethod = method;
+      window.saveBillToCloud(window.SHOP_ID, pendingDeliveryBill).catch((e) => console.warn("Could not sync delivery method:", e));
+      saveState();
+      printInvoice(pendingDeliveryBill);
+      pendingDeliveryBill = null;
+    }
+    document.getElementById("delivery-modal").classList.remove("open");
+    closeDrawer();
+  }
+  function copyUpi() { navigator.clipboard.writeText(UPI_ID); }
+
+  async function openHistoryModal() {
+    document.getElementById("history-list").innerHTML = `<div class="history-empty">Loading…</div>`;
+    document.getElementById("history-modal").classList.add("open");
+    try { billHistory = await window.fetchBillHistory(window.SHOP_ID); saveState(); }
+    catch (e) { console.warn("Could not fetch bill history:", e); }
+    renderHistoryList();
+  }
+  function closeHistoryModal() { document.getElementById("history-modal").classList.remove("open"); }
+  function renderHistoryList() {
+    const list = document.getElementById("history-list");
+    if (billHistory.length === 0) { list.innerHTML = `<div class="history-empty">No paid bills yet.</div>`; return; }
+    list.innerHTML = billHistory.map((h) => `
+      <div class="history-item">
+        <div class="h-top"><span>${h.no}</span><span>₹${h.total}</span></div>
+        <div class="h-sub">${h.date} · ${h.time} · ${h.items.length} item${h.items.length > 1 ? "s" : ""}${h.deliveryMethod ? " · " + h.deliveryMethod : ""}</div>
+      </div>`).join("");
+  }
+
+  function renderCatalog() {
+    const wrap = document.getElementById("catalog");
+    const byCategory = {};
+    PRODUCTS.forEach((p) => { (byCategory[p.category] = byCategory[p.category] || []).push(p); });
+    const categoryOrder = [...new Set(PRODUCTS.map((p) => p.category))];
+    let html = "";
+    categoryOrder.forEach((cat) => {
+      html += `<div class="category-section"><div class="category-title">${cat}</div></div><div class="grid">`;
+      html += byCategory[cat].sort((a, b) => a.addedAt - b.addedAt).map((p) => `
+        <div class="card">
+          <div class="emoji" id="emoji-block-${p.id}"></div>
+          <div><div class="name" id="name-block-${p.id}"></div><div class="unit" id="unit-block-${p.id}"></div></div>
+          <div class="price-row" id="price-block-${p.id}"></div>
+          <div id="controls-${p.id}"><button class="add-btn" onclick="addOne('${p.id}')">Add to cart</button></div>
+        </div>`).join("");
+      if (adminUnlocked && cat === categoryOrder[categoryOrder.length - 1]) {
+        html += `<div class="add-item-card" onclick="openAddItemModal()"><div class="plus">+</div><div>Add new item</div></div>`;
+      }
+      html += `</div>`;
+    });
+    wrap.innerHTML = html;
+    PRODUCTS.forEach((p) => { renderPriceBlock(p.id); renderNameBlock(p.id); renderUnitBlock(p.id); renderEmojiBlock(p.id); });
+    Object.keys(cart).forEach((id) => renderCard(id));
+    updateBadge();
+    renderDrawer();
+  }
+
+  function slugify(name) {
+    let base = slugifyBase(name), id = base, n = 2;
+    while (PRODUCTS.some((p) => p.id === id)) { id = `${base}-${n}`; n++; }
+    return id;
+  }
+  function openAddItemModal() {
+    ["new-item-emoji","new-item-name","new-item-category","new-item-unit","new-item-mrp","new-item-price"].forEach((f) => document.getElementById(f).value = "");
+    document.getElementById("item-error").textContent = "";
+    document.getElementById("item-modal").classList.add("open");
+    document.getElementById("new-item-name").focus();
+  }
+  function closeAddItemModal() { document.getElementById("item-modal").classList.remove("open"); }
+  function submitNewItem() {
+    const emoji = document.getElementById("new-item-emoji").value.trim() || "🎆";
+    const name = document.getElementById("new-item-name").value.trim();
+    const category = document.getElementById("new-item-category").value.trim() || "Other";
+    const unit = document.getElementById("new-item-unit").value.trim() || "1 BOX";
+    const mrpRaw = document.getElementById("new-item-mrp").value.trim();
+    const mrp = mrpRaw === "" ? null : parseFloat(mrpRaw);
+    const price = parseFloat(document.getElementById("new-item-price").value);
+    if (!name) { document.getElementById("item-error").textContent = "Enter an item name."; return; }
+    if (isNaN(price) || price < 0) { document.getElementById("item-error").textContent = "Enter a valid offer price."; return; }
+    PRODUCTS.push({ id: slugify(name), name, category, unit, price, mrp, emoji, addedAt: nextAddedAt++ });
+    closeAddItemModal(); renderCatalog(); persistProducts();
+    showToast(`${name} added.`);
+  }
+
+  async function exportToExcel() {
+    try { billHistory = await window.fetchBillHistory(window.SHOP_ID); }
+    catch (e) { console.warn("Could not refresh bill history before export:", e); }
+    const wb = XLSX.utils.book_new();
+    const productRows = PRODUCTS.map((p) => ({ id: p.id, name: p.name, category: p.category, unit: p.unit, mrp: p.mrp || "", price: p.price, emoji: p.emoji, addedAt: p.addedAt }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(productRows), "Products");
+    const billRows = [];
+    billHistory.forEach((h) => h.items.forEach((it) => billRows.push({ "Invoice No": h.no, "Date": h.date, "Time": h.time, "Item": it.name, "Unit": it.unit || "", "Qty": it.qty, "Price": it.price, "Line Total": it.qty * it.price, "Bill Total": h.total })));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(billRows), "Bill History");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ invoiceCounter, nextAddedAt, exportedAt: new Date().toISOString() }]), "Meta");
+    XLSX.writeFile(wb, `Dhamini-Crackers-Backup-${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast("Backup downloaded.");
+  }
+
+  function handleRestoreFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+        let exportedAt = null;
+        if (wb.SheetNames.includes("Meta")) {
+          const metaRows = XLSX.utils.sheet_to_json(wb.Sheets["Meta"]);
+          if (metaRows[0] && metaRows[0].exportedAt) exportedAt = new Date(metaRows[0].exportedAt);
+        }
+        let warningMsg = "Restoring this backup will overwrite your current products on this device.";
+        if (exportedAt && !isNaN(exportedAt)) {
+          const daysOld = Math.floor((Date.now() - exportedAt.getTime()) / 86400000);
+          const dateStr = exportedAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+          warningMsg = daysOld <= 0 ? `This backup was taken today (${dateStr}). Restoring will overwrite current product data.` : `This backup is ${daysOld} day${daysOld > 1 ? "s" : ""} old (from ${dateStr}). Restoring will overwrite recent changes — this cannot be undone.`;
+        }
+        if (!confirm(warningMsg + "\n\nContinue with restore?")) { event.target.value = ""; return; }
+        if (wb.SheetNames.includes("Products")) {
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets["Products"]);
+          if (rows.length) {
+            PRODUCTS.length = 0;
+            rows.forEach((r) => PRODUCTS.push({ id: String(r.id), name: String(r.name), category: String(r.category || "Other"), unit: String(r.unit || ""), mrp: r.mrp === "" || r.mrp == null ? null : Number(r.mrp), price: Number(r.price) || 0, emoji: String(r.emoji || "🎆"), addedAt: Number(r.addedAt) || 0 }));
+            nextAddedAt = Math.max(...PRODUCTS.map((p) => p.addedAt), 0) + 1;
+          }
+        }
+        saveState(); renderCatalog(); persistProducts();
+        showToast(exportedAt ? `Restored backup from ${exportedAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}.` : "Restored from backup.");
+      } catch (err) {
+        console.error(err);
+        showToast("Couldn't read that file. Is it a Dhamini Crackers backup?");
+      } finally { event.target.value = ""; }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  async function loadSharedProducts() {
+    try {
+      const shared = await window.fetchSharedProducts();
+      if (shared && Array.isArray(shared.products) && shared.products.length) {
+        PRODUCTS.length = 0;
+        shared.products.forEach((p) => PRODUCTS.push(p));
+        if (typeof shared.nextAddedAt === "number") nextAddedAt = shared.nextAddedAt;
+      } else {
+        await window.saveSharedProducts(PRODUCTS, nextAddedAt);
+      }
+    } catch (e) { console.warn("Could not load shared prices, showing local defaults:", e); }
+  }
+  async function persistProducts() {
+    try { await window.saveSharedProducts(PRODUCTS, nextAddedAt); }
+    catch (e) { console.warn("Could not save shared prices:", e); showToast("Saved locally, but couldn't sync online. Check connection."); }
+    saveState();
+  }
+
+  async function init() {
+    let attempts = 0;
+    while (typeof window.fetchSharedProducts !== "function" && attempts < 50) { await new Promise((r) => setTimeout(r, 50)); attempts++; }
+    await loadSharedProducts();
+    loadState();
+    renderCatalog();
+  }
+  init();
+
+  document.getElementById("admin-password-input").addEventListener("keydown", (e) => { if (e.key === "Enter") submitAdminPassword(); });
+  document.getElementById("new-item-price").addEventListener("keydown", (e) => { if (e.key === "Enter") submitNewItem(); });
+</script>
+
+<div id="print-invoice"></div>
+
+</body>
+</html>
