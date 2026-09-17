@@ -320,6 +320,7 @@
     <div style="display:flex; align-items:center;">
       <button class="admin-btn" id="export-btn" onclick="exportToExcel()" style="display:none;">⬇️ Export</button>
       <button class="admin-btn" id="restore-btn" onclick="document.getElementById('restore-file-input').click()" style="display:none;">⬆️ Restore</button>
+      <button class="admin-btn" id="force-sync-btn" onclick="forceSyncFromCode()" style="display:none;">🔄 Force Sync from Code</button>
       <button class="admin-btn" id="reset-invoice-btn" onclick="openInvoiceResetModal()" style="display:none;">🗑️ Reset Invoices</button>
       <input type="file" id="restore-file-input" accept=".xlsx" style="display:none;" onchange="handleRestoreFile(event)" />
       <button class="admin-btn" id="admin-btn" onclick="toggleAdmin()">🔒 Admin</button>
@@ -566,6 +567,13 @@
 
   let adminUnlocked = false;
   let nextAddedAt = Math.max(...PRODUCTS.map((p) => p.addedAt)) + 1;
+  // Snapshot of the catalog exactly as written in the code above, captured
+  // before Firestore data (which may be an older/larger catalog from an
+  // earlier deploy) gets loaded and overwrites PRODUCTS/nextAddedAt.
+  // Used by "Force Sync from Code" to push this smaller list back to
+  // Firestore on demand, since normal loads never overwrite an existing doc.
+  const CODE_DEFAULT_PRODUCTS = PRODUCTS.map((p) => ({ ...p }));
+  const CODE_DEFAULT_NEXT_ADDED_AT = nextAddedAt;
   let invoiceCounter = 1;
   let billHistory = [];
   let currentInvoice = null;
@@ -628,6 +636,7 @@
       document.getElementById("admin-btn").classList.remove("unlocked");
       document.getElementById("export-btn").style.display = "none";
       document.getElementById("restore-btn").style.display = "none";
+      document.getElementById("force-sync-btn").style.display = "none";
       document.getElementById("reset-invoice-btn").style.display = "none";
       document.getElementById("history-link-btn").style.display = "none";
       renderCatalog();
@@ -649,6 +658,7 @@
       document.getElementById("admin-btn").classList.add("unlocked");
       document.getElementById("export-btn").style.display = "inline-block";
       document.getElementById("restore-btn").style.display = "inline-block";
+      document.getElementById("force-sync-btn").style.display = "inline-block";
       document.getElementById("reset-invoice-btn").style.display = "inline-block";
       document.getElementById("history-link-btn").style.display = "block";
       renderCatalog();
@@ -963,6 +973,26 @@
     PRODUCTS.push({ id: slugify(name), name, category, unit, price, mrp, emoji, addedAt: nextAddedAt++ });
     closeAddItemModal(); renderCatalog(); persistProducts();
     showToast(`${name} added.`);
+  }
+
+  // Overwrites the LIVE Firestore catalog with the list currently defined in
+  // this file (CODE_DEFAULT_PRODUCTS). Needed because normal loads never
+  // overwrite an existing Firestore doc — only used the first time a shop's
+  // shopProducts doc is created — so shrinking the catalog in code alone
+  // has no effect once real data already exists in Firestore.
+  async function forceSyncFromCode() {
+    const ok = confirm(
+      `This will REPLACE the live product list (currently ${PRODUCTS.length} items) with the ${CODE_DEFAULT_PRODUCTS.length} items defined in the code, on every device.\n\n` +
+      `Any price/name/emoji edits made through this Admin panel since the last code update will be LOST — only what's in the code survives.\n\n` +
+      `Bill history and invoice numbers are NOT affected.\n\nContinue?`
+    );
+    if (!ok) return;
+    PRODUCTS.length = 0;
+    CODE_DEFAULT_PRODUCTS.forEach((p) => PRODUCTS.push({ ...p }));
+    nextAddedAt = CODE_DEFAULT_NEXT_ADDED_AT;
+    renderCatalog();
+    await persistProducts();
+    showToast(`Synced — catalog now matches the code (${PRODUCTS.length} items).`);
   }
 
   async function exportToExcel() {
