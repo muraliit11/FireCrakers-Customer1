@@ -74,6 +74,13 @@
     padding: 16px; display: flex; flex-direction: column; gap: 8px;
   }
   .emoji { font-size: 30px; }
+  .photo-thumb { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; display: block; }
+  .photo-controls { display: flex; gap: 6px; }
+  .photo-btn {
+    font-size: 11px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; cursor: pointer; color: var(--muted);
+  }
+  .photo-btn:hover { background: #FBEFD6; }
   .name { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
   .unit { color: var(--muted); font-size: 12px; }
   .price-row { display: flex; align-items: baseline; gap: 8px; }
@@ -551,7 +558,7 @@
         usedIds[id] = true;
         const price = isFlatPrice ? mrpOrFlat : Math.round(mrpOrFlat / 5); // 80% off, offer = MRP/5
         const mrp = isFlatPrice ? null : mrpOrFlat;
-        PRODUCTS.push({ id, name, category, unit, price, mrp, emoji: itemEmoji || catEmoji, addedAt: counter++ });
+        PRODUCTS.push({ id, name, category, unit, price, mrp, emoji: itemEmoji || catEmoji, photo: null, addedAt: counter++ });
       });
     });
   }
@@ -752,7 +759,70 @@
   function renderEmojiBlock(id) {
     const p = PRODUCTS.find((x) => x.id === id);
     const el = document.getElementById("emoji-block-" + id);
-    el.innerHTML = !adminUnlocked ? p.emoji : `<input class="emoji-input" type="text" value="${p.emoji}" id="emoji-input-${id}" maxlength="4" />`;
+    if (p.photo) {
+      el.innerHTML = `<img class="photo-thumb" src="${p.photo}" alt="${p.name}">`;
+    } else {
+      el.innerHTML = !adminUnlocked ? p.emoji : `<input class="emoji-input" type="text" value="${p.emoji}" id="emoji-input-${id}" maxlength="4" />`;
+    }
+  }
+  function renderPhotoControls(id) {
+    const el = document.getElementById("photo-controls-" + id);
+    if (!el) return; // only present in the card markup when adminUnlocked
+    const p = PRODUCTS.find((x) => x.id === id);
+    el.innerHTML = p.photo
+      ? `<button class="photo-btn" onclick="document.getElementById('photo-file-${id}').click()">📷 Replace</button>
+         <button class="photo-btn" onclick="removePhoto('${id}')">✕ Remove</button>`
+      : `<button class="photo-btn" onclick="document.getElementById('photo-file-${id}').click()">📷 Add photo</button>`;
+  }
+  function compressImageFile(file, maxDim, quality) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  async function handlePhotoUpload(id, event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const p = PRODUCTS.find((x) => x.id === id);
+    try {
+      p.photo = await compressImageFile(file, 300, 0.72); // small + compressed, keeps Firestore doc size down
+      renderEmojiBlock(id);
+      renderPhotoControls(id);
+      if (cart[id]) renderDrawer();
+      persistProducts();
+      showToast(`${p.name} photo updated.`);
+    } catch (e) {
+      console.error(e);
+      showToast("Couldn't read that photo. Try a different file.");
+    } finally {
+      event.target.value = "";
+    }
+  }
+  function removePhoto(id) {
+    const p = PRODUCTS.find((x) => x.id === id);
+    if (!p.photo) return;
+    if (!confirm(`Remove the photo for "${p.name}" and go back to the emoji icon?`)) return;
+    p.photo = null;
+    renderEmojiBlock(id);
+    renderPhotoControls(id);
+    if (cart[id]) renderDrawer();
+    persistProducts();
+    showToast("Photo removed.");
   }
 
   function nameKey(n) { return (n || "").trim().toLowerCase(); }
@@ -813,7 +883,7 @@
       : entries.map(([id, qty]) => {
           const p = PRODUCTS.find((x) => x.id === id);
           return `<div class="line-item">
-            <div class="line-emoji">${p.emoji}</div>
+            <div class="line-emoji">${p.photo ? `<img src="${p.photo}" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">` : p.emoji}</div>
             <div class="line-info"><div class="line-name">${p.name}</div><div class="line-sub">${qty} × ₹${p.price}</div></div>
             <div class="line-total">₹${p.price * qty}</div>
           </div>`;
@@ -952,6 +1022,10 @@
       html += byCategory[key].sort((a, b) => a.addedAt - b.addedAt).map((p) => `
         <div class="card">
           <div class="emoji" id="emoji-block-${p.id}"></div>
+          ${adminUnlocked ? `
+            <input type="file" accept="image/*" id="photo-file-${p.id}" style="display:none;" onchange="handlePhotoUpload('${p.id}', event)">
+            <div class="photo-controls" id="photo-controls-${p.id}"></div>
+          ` : ``}
           <div><div class="name" id="name-block-${p.id}"></div><div class="unit" id="unit-block-${p.id}"></div></div>
           <div class="price-row" id="price-block-${p.id}"></div>
           <div id="controls-${p.id}"><button class="add-btn" onclick="addOne('${p.id}')">Add to cart</button></div>
@@ -962,7 +1036,7 @@
       html += `</div>`;
     });
     wrap.innerHTML = html;
-    PRODUCTS.forEach((p) => { renderPriceBlock(p.id); renderNameBlock(p.id); renderUnitBlock(p.id); renderEmojiBlock(p.id); });
+    PRODUCTS.forEach((p) => { renderPriceBlock(p.id); renderNameBlock(p.id); renderUnitBlock(p.id); renderEmojiBlock(p.id); renderPhotoControls(p.id); });
     Object.keys(cart).forEach((id) => renderCard(id));
     updateBadge();
     renderDrawer();
@@ -999,7 +1073,7 @@
       const ok = confirm(`"${dupe.name}" already exists in ${dupe.category}.\n\nAdd this as a duplicate name anyway?`);
       if (!ok) return;
     }
-    PRODUCTS.push({ id: slugify(name), name, category, unit, price, mrp, emoji, addedAt: nextAddedAt++ });
+    PRODUCTS.push({ id: slugify(name), name, category, unit, price, mrp, emoji, photo: null, addedAt: nextAddedAt++ });
     closeAddItemModal(); renderCatalog(); persistProducts();
     showToast(`${name} added.`);
   }
