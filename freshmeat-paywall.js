@@ -13,15 +13,25 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, "freshmeatPaywallApp");
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ---- Trial & Paywall Logic (Phone-verified, Firestore-backed) ----
-const TRIAL_HOURS = 1;
-const SUBSCRIPTION_HOURS = 24;
-const SUBSCRIPTION_PRICE = 20; // in rupees
-const UPI_ID = "9940491206@upi"; // replace with your actual UPI ID
+// TESTING MODE: 30-minute trial for customer1 only. Switch back to
+// TRIAL_HOURS = 2 (and revert isAccessAllowed + the verified-message text
+// below) once testing is done.
+const TRIAL_MINUTES = 30;
+const PLATFORM_UPI_ID = "9940491206@upi"; // platform owner's UPI ID — access-fee payments always go here, same across all customer deployments, do not change per customer
+
+// Access-fee tiers. All paid to PLATFORM_UPI_ID (this is the platform's own
+// access fee, separate from any product/order payment the shop owner collects
+// on their own UPI ID elsewhere in the app).
+const TIERS = [
+  { id: "day",   label: "1 Day",   price: 20,   hours: 24 },
+  { id: "month", label: "1 Month", price: 200,  hours: 24 * 30 },
+  { id: "year",  label: "1 Year",  price: 2000, hours: 24 * 365 }
+];
 
 let confirmationResult = null;
 
@@ -33,8 +43,18 @@ function setVerifiedPhone(phone) {
   localStorage.setItem("fm_verifiedPhone", phone);
 }
 
+// Each shop deployment (freshmeat-shop, freshmeat-customer1, etc.) sets its
+// own window.SHOP_ID from its index.html's inline script. Trials are stored
+// under trials/{shopId}/phones/{phone} so a customer's trial on one shop is
+// completely independent from their trial on any other shop, even though
+// every deployment shares the same Firestore project. Falls back to
+// "default" only if a page somehow doesn't set window.SHOP_ID.
+function getShopId() {
+  return window.SHOP_ID || "default";
+}
+
 async function getOrCreateTrialDoc(phone) {
-  const ref = doc(db, "trials", phone);
+  const ref = doc(db, "trials", getShopId(), "phones", phone);
   const snap = await getDoc(ref);
   if (snap.exists()) {
     return snap.data();
@@ -44,16 +64,16 @@ async function getOrCreateTrialDoc(phone) {
   return data;
 }
 
-async function markPaid(phone) {
-  const unlockUntil = Date.now() + SUBSCRIPTION_HOURS * 60 * 60 * 1000;
-  const ref = doc(db, "trials", phone);
-  await setDoc(ref, { unlockUntil }, { merge: true });
+async function markPaid(phone, tier) {
+  const unlockUntil = Date.now() + tier.hours * 60 * 60 * 1000;
+  const ref = doc(db, "trials", getShopId(), "phones", phone);
+  await setDoc(ref, { unlockUntil, lastTier: tier.id }, { merge: true });
   return unlockUntil;
 }
 
 function isAccessAllowed(trialData) {
   const now = Date.now();
-  const trialExpiry = trialData.firstVisit + TRIAL_HOURS * 60 * 60 * 1000;
+  const trialExpiry = trialData.firstVisit + TRIAL_MINUTES * 60 * 1000;
   if (now < trialExpiry) return true;
   if (now < (trialData.unlockUntil || 0)) return true;
   return false;
@@ -135,8 +155,7 @@ function showOtpEntryScreen(phone) {
     try {
       await confirmationResult.confirm(code);
       setVerifiedPhone(phone);
-      removeOverlay();
-      checkAccess();
+      showTrialStartedScreen();
     } catch (err) {
       errorEl.textContent = "Incorrect code. Please try again.";
       console.error(err);
@@ -144,24 +163,63 @@ function showOtpEntryScreen(phone) {
   });
 }
 
-function showPaywallScreen(phone) {
-  const upiLink = `upi://pay?pa=${UPI_ID}&pn=FreshMeat&am=${SUBSCRIPTION_PRICE}&cu=INR&tn=24hr%20access%20pass`;
-  const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
-
+function showTrialStartedScreen() {
   showOverlay(`
     <div style="background:#F7F1EA; border-radius:16px; padding:28px; max-width:340px; text-align:center; font-family:'Inter',sans-serif;">
-      <h2 style="margin:0 0 8px;">Free trial ended</h2>
-      <p style="color:#8A6F5C; margin:0 0 16px;">Pay ₹${SUBSCRIPTION_PRICE} for 24 hours of access</p>
-      <img src="${qrImgSrc}" alt="UPI QR code" style="width:200px; height:200px; margin-bottom:16px; border-radius:8px;" />
-      <p style="font-size:13px; color:#8A6F5C; margin:0 0 16px;">Scan with any UPI app, then confirm below</p>
-      <button id="fm-paid-btn" style="width:100%; padding:12px; background:#7A2323; color:white; border:none; border-radius:8px; font-size:16px;">I've paid</button>
+      <h2 style="margin:0 0 8px;">You're verified! 🎉</h2>
+      <p style="color:#8A6F5C; margin:0 0 16px;">Enjoy ${TRIAL_MINUTES} minutes of free access. After that, you can choose a plan to continue.</p>
+      <button id="fm-start-shopping-btn" style="width:100%; padding:12px; background:#7A2323; color:white; border:none; border-radius:8px; font-size:16px;">Start Shopping</button>
     </div>
   `);
 
-  document.getElementById("fm-paid-btn").addEventListener("click", async () => {
-    await markPaid(phone);
+  document.getElementById("fm-start-shopping-btn").addEventListener("click", () => {
     removeOverlay();
+    checkAccess();
   });
+}
+
+function renderTierOptionsHtml(selectedTierId) {
+  return TIERS.map(tier => `
+    <label style="display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:8px; border:1px solid ${tier.id === selectedTierId ? '#7A2323' : '#ccc'}; border-radius:8px; text-align:left; cursor:pointer;">
+      <input type="radio" name="fm-tier" value="${tier.id}" ${tier.id === selectedTierId ? "checked" : ""} style="accent-color:#7A2323;" />
+      <span style="flex:1;">${tier.label}</span>
+      <strong>₹${tier.price}</strong>
+    </label>
+  `).join("");
+}
+
+function showPaywallScreen(phone) {
+  let selectedTier = TIERS[0];
+
+  function render() {
+    const upiLink = `upi://pay?pa=${PLATFORM_UPI_ID}&pn=FreshMeat&am=${selectedTier.price}&cu=INR&tn=${encodeURIComponent(selectedTier.label + " access pass")}`;
+    const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+
+    showOverlay(`
+      <div style="background:#F7F1EA; border-radius:16px; padding:28px; max-width:340px; text-align:center; font-family:'Inter',sans-serif;">
+        <h2 style="margin:0 0 8px;">Free trial ended</h2>
+        <p style="color:#8A6F5C; margin:0 0 16px;">Choose an access plan</p>
+        <div id="fm-tier-list">${renderTierOptionsHtml(selectedTier.id)}</div>
+        <img src="${qrImgSrc}" alt="UPI QR code" style="width:200px; height:200px; margin:8px 0 16px; border-radius:8px;" />
+        <p style="font-size:13px; color:#8A6F5C; margin:0 0 16px;">Scan with any UPI app to pay ₹${selectedTier.price} for ${selectedTier.label.toLowerCase()}, then confirm below</p>
+        <button id="fm-paid-btn" style="width:100%; padding:12px; background:#7A2323; color:white; border:none; border-radius:8px; font-size:16px;">I've paid</button>
+      </div>
+    `);
+
+    document.querySelectorAll('input[name="fm-tier"]').forEach(input => {
+      input.addEventListener("change", (e) => {
+        selectedTier = TIERS.find(t => t.id === e.target.value) || TIERS[0];
+        render();
+      });
+    });
+
+    document.getElementById("fm-paid-btn").addEventListener("click", async () => {
+      await markPaid(phone, selectedTier);
+      removeOverlay();
+    });
+  }
+
+  render();
 }
 
 async function checkAccess() {
@@ -176,4 +234,33 @@ async function checkAccess() {
   }
 }
 
+// Exposed for index.html to call before allowing checkout (opening the pay
+// modal, or recording a payment). Re-checks trial status on demand and, if
+// access has expired, shows the paywall overlay and tells the caller to
+// abort — this is what actually blocks checkout, not just the visual
+// overlay from the periodic checkAccess() poll below.
+window.fmCheckAccessBlocking = async function () {
+  const phone = getVerifiedPhone();
+  if (!phone) {
+    showPhoneEntryScreen();
+    return false;
+  }
+  const trialData = await getOrCreateTrialDoc(phone);
+  if (!isAccessAllowed(trialData)) {
+    showPaywallScreen(phone);
+    return false;
+  }
+  return true;
+};
+
 checkAccess();
+
+// Re-check periodically so a tab that's already open gets paywalled the
+// moment the trial (or paid access) expires, instead of only on the next
+// full page reload. Only poll once the phone is verified — polling before
+// that would re-render (and reset) the phone/OTP entry screens mid-typing.
+setInterval(() => {
+  if (getVerifiedPhone()) {
+    checkAccess();
+  }
+}, 15000); // every 15s
