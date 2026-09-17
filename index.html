@@ -755,6 +755,13 @@
     el.innerHTML = !adminUnlocked ? p.emoji : `<input class="emoji-input" type="text" value="${p.emoji}" id="emoji-input-${id}" maxlength="4" />`;
   }
 
+  function nameKey(n) { return (n || "").trim().toLowerCase(); }
+  // Returns the conflicting product (if any) with the same name, excluding
+  // the item currently being edited/added.
+  function findDuplicateName(name, excludeId) {
+    return PRODUCTS.find((p) => p.id !== excludeId && nameKey(p.name) === nameKey(name));
+  }
+
   function saveItem(id) {
     const nameInput = document.getElementById("name-input-" + id);
     const unitInput = document.getElementById("unit-input-" + id);
@@ -768,6 +775,11 @@
     const newEmoji = emojiInput.value.trim() || "🎆";
     if (!newName) { showToast("Item name can't be empty."); return; }
     if (isNaN(newPrice) || newPrice < 0) { showToast("Enter a valid price."); return; }
+    const dupe = findDuplicateName(newName, id);
+    if (dupe) {
+      const ok = confirm(`"${dupe.name}" already exists in ${dupe.category}.\n\nSave this as a duplicate name anyway?`);
+      if (!ok) return;
+    }
     const p = PRODUCTS.find((x) => x.id === id);
     p.name = newName; p.unit = newUnit; p.price = newPrice; p.mrp = newMrp; p.emoji = newEmoji;
     renderNameBlock(id); renderUnitBlock(id); renderPriceBlock(id); renderEmojiBlock(id);
@@ -921,22 +933,30 @@
       </div>`).join("");
   }
 
+  function categoryKey(cat) { return (cat || "").trim().toLowerCase(); }
+
   function renderCatalog() {
     const wrap = document.getElementById("catalog");
-    const byCategory = {};
-    PRODUCTS.forEach((p) => { (byCategory[p.category] = byCategory[p.category] || []).push(p); });
-    const categoryOrder = [...new Set(PRODUCTS.map((p) => p.category))];
+    const byCategory = {};       // normalized key -> items[]
+    const displayNameByKey = {}; // normalized key -> the first-seen original spelling, used as the heading
+    PRODUCTS.forEach((p) => {
+      const key = categoryKey(p.category);
+      if (!byCategory[key]) { byCategory[key] = []; displayNameByKey[key] = p.category; }
+      byCategory[key].push(p);
+    });
+    const categoryOrder = Object.keys(byCategory);
     let html = "";
-    categoryOrder.forEach((cat) => {
+    categoryOrder.forEach((key) => {
+      const cat = displayNameByKey[key];
       html += `<div class="category-section"><div class="category-title">${cat}</div></div><div class="grid">`;
-      html += byCategory[cat].sort((a, b) => a.addedAt - b.addedAt).map((p) => `
+      html += byCategory[key].sort((a, b) => a.addedAt - b.addedAt).map((p) => `
         <div class="card">
           <div class="emoji" id="emoji-block-${p.id}"></div>
           <div><div class="name" id="name-block-${p.id}"></div><div class="unit" id="unit-block-${p.id}"></div></div>
           <div class="price-row" id="price-block-${p.id}"></div>
           <div id="controls-${p.id}"><button class="add-btn" onclick="addOne('${p.id}')">Add to cart</button></div>
         </div>`).join("");
-      if (adminUnlocked && cat === categoryOrder[categoryOrder.length - 1]) {
+      if (adminUnlocked && key === categoryOrder[categoryOrder.length - 1]) {
         html += `<div class="add-item-card" onclick="openAddItemModal()"><div class="plus">+</div><div>Add new item</div></div>`;
       }
       html += `</div>`;
@@ -963,13 +983,22 @@
   function submitNewItem() {
     const emoji = document.getElementById("new-item-emoji").value.trim() || "🎆";
     const name = document.getElementById("new-item-name").value.trim();
-    const category = document.getElementById("new-item-category").value.trim() || "Other";
+    let category = document.getElementById("new-item-category").value.trim() || "Other";
+    // If this matches an existing category except for case/spacing, reuse the
+    // existing spelling so it joins that section instead of creating a new one.
+    const existingMatch = PRODUCTS.find((p) => categoryKey(p.category) === categoryKey(category));
+    if (existingMatch) category = existingMatch.category;
     const unit = document.getElementById("new-item-unit").value.trim() || "1 BOX";
     const mrpRaw = document.getElementById("new-item-mrp").value.trim();
     const mrp = mrpRaw === "" ? null : parseFloat(mrpRaw);
     const price = parseFloat(document.getElementById("new-item-price").value);
     if (!name) { document.getElementById("item-error").textContent = "Enter an item name."; return; }
     if (isNaN(price) || price < 0) { document.getElementById("item-error").textContent = "Enter a valid offer price."; return; }
+    const dupe = findDuplicateName(name, null);
+    if (dupe) {
+      const ok = confirm(`"${dupe.name}" already exists in ${dupe.category}.\n\nAdd this as a duplicate name anyway?`);
+      if (!ok) return;
+    }
     PRODUCTS.push({ id: slugify(name), name, category, unit, price, mrp, emoji, addedAt: nextAddedAt++ });
     closeAddItemModal(); renderCatalog(); persistProducts();
     showToast(`${name} added.`);
