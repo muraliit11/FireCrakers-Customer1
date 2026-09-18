@@ -933,11 +933,19 @@
     return window.fmCheckAccessBlocking();
   }
 
-  async function openPayModal() {
+    async function openPayModal() {
     const total = totalAmount();
     if (total === 0) return;
     if (!currentInvoice) { showToast("Still preparing your invoice — one moment…"); return; }
-    if (!(await paywallAllows())) return;
+    let allowed;
+    try {
+      allowed = await paywallAllows();
+    } catch (e) {
+      console.error("Paywall check failed:", e);
+      showToast("Couldn't verify access right now. Check your connection and try again.");
+      return;
+    }
+    if (!allowed) return;
     document.getElementById("pay-amount").textContent = "₹" + total;
     document.getElementById("pay-invoice-no").textContent = currentInvoice ? currentInvoice.no : "";
     document.getElementById("payee-name").textContent = UPI_NAME;
