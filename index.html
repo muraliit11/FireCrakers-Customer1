@@ -229,11 +229,19 @@
   .item-error { color: var(--accent); font-size: 12px; min-height: 16px; margin-top: 8px; }
   .reset-checkbox-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 12px; text-align: left; }
   .reset-checkbox-row input { margin-top: 2px; }
-  @media (max-width: 480px) {
+    @media (max-width: 480px) {
     .header-inner { flex-wrap: wrap; gap: 10px; padding: 14px 16px; }
     .logo { width: 100%; }
     .logo span.tag { display: block; margin-left: 0; margin-top: 2px; }
     .header-inner > div:last-child { width: 100%; justify-content: space-between; }
+    .hero h1 { font-size: 21px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 16px 8px; }
+    .card { padding: 10px; gap: 6px; }
+    .name { font-size: 13px; }
+    .unit { font-size: 11px; }
+    .price { font-size: 15px; }
+    .mrp { font-size: 11px; }
+    .add-btn { font-size: 12px; padding: 8px 0; }
   }
 </style>
  <script type="module">
