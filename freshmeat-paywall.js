@@ -11,11 +11,11 @@ const firebaseConfig = {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { initializeFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const app = initializeApp(firebaseConfig, "freshmeatPaywallApp");
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = initializeFirestore(app, { experimentalForceLongPolling: true, useFetchStreams: false });
 
 // ---- Trial & Paywall Logic (Phone-verified, Firestore-backed) ----
 // TESTING MODE: 30-minute trial for customer1 only. Switch back to
