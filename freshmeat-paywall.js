@@ -224,7 +224,8 @@ function showPaywallScreen(phone) {
 
 async function checkAccess() {
   const phone = getVerifiedPhone();
-  if (!phone) {
+  if (!phone || !auth.currentUser) {
+    if (phone && !auth.currentUser) localStorage.removeItem("fm_verifiedPhone"); // stale flag, real session is gone
     showPhoneEntryScreen();
     return;
   }
