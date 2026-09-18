@@ -242,7 +242,8 @@ async function checkAccess() {
 // overlay from the periodic checkAccess() poll below.
 window.fmCheckAccessBlocking = async function () {
   const phone = getVerifiedPhone();
-  if (!phone) {
+  if (!phone || !auth.currentUser) {
+    if (phone && !auth.currentUser) localStorage.removeItem("fm_verifiedPhone"); // stale flag, real session is gone
     showPhoneEntryScreen();
     return false;
   }
