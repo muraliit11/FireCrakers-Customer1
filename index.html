@@ -1161,11 +1161,20 @@
       }
     } catch (e) { console.warn("Could not load shared prices, showing local defaults:", e); }
   }
-  async function persistProducts() {
+  let persistInFlight = false;
+let persistQueued = false;
+async function persistProducts() {
+  persistQueued = true;
+  if (persistInFlight) return;
+  persistInFlight = true;
+  while (persistQueued) {
+    persistQueued = false;
     try { await window.saveSharedProducts(PRODUCTS, nextAddedAt); }
     catch (e) { console.warn("Could not save shared prices:", e); showToast("Saved locally, but couldn't sync online. Check connection."); }
-    saveState();
   }
+  persistInFlight = false;
+  saveState();
+}
 
   async function init() {
     let attempts = 0;
