@@ -849,7 +849,6 @@
     const newUnit = unitInput.value.trim();
     const newPrice = parseFloat(priceInput.value);
     const newMrp = mrpInput.value.trim() === "" ? null : parseFloat(mrpInput.value);
-    const newEmoji = emojiInput.value.trim() || "🎆";
     if (!newName) { showToast("Item name can't be empty."); return; }
     if (isNaN(newPrice) || newPrice < 0) { showToast("Enter a valid price."); return; }
     const dupe = findDuplicateName(newName, id);
@@ -858,6 +857,7 @@
       if (!ok) return;
     }
     const p = PRODUCTS.find((x) => x.id === id);
+    const newEmoji = emojiInput ? (emojiInput.value.trim() || "🎆") : p.emoji; // no emoji-input exists when the item has a photo
     p.name = newName; p.unit = newUnit; p.price = newPrice; p.mrp = newMrp; p.emoji = newEmoji;
     renderNameBlock(id); renderUnitBlock(id); renderPriceBlock(id); renderEmojiBlock(id);
     if (cart[id]) renderDrawer();
