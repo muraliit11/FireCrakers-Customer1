@@ -730,7 +730,14 @@
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 2000);
   }
-
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
   function priceBlockHtml(p) {
     if (!adminUnlocked) {
       return p.mrp
@@ -746,23 +753,23 @@
     const p = PRODUCTS.find((x) => x.id === id);
     document.getElementById("price-block-" + id).innerHTML = priceBlockHtml(p);
   }
-  function renderNameBlock(id) {
+    function renderNameBlock(id) {
     const p = PRODUCTS.find((x) => x.id === id);
     const el = document.getElementById("name-block-" + id);
-    el.innerHTML = !adminUnlocked ? p.name : `<input class="name-input" type="text" value="${p.name}" id="name-input-${id}" />`;
+    el.innerHTML = !adminUnlocked ? escapeHtml(p.name) : `<input class="name-input" type="text" value="${escapeHtml(p.name)}" id="name-input-${id}" />`;
   }
-  function renderUnitBlock(id) {
+    function renderUnitBlock(id) {
     const p = PRODUCTS.find((x) => x.id === id);
     const el = document.getElementById("unit-block-" + id);
-    el.innerHTML = !adminUnlocked ? p.unit : `<input class="unit-input" type="text" value="${p.unit}" id="unit-input-${id}" />`;
+    el.innerHTML = !adminUnlocked ? escapeHtml(p.unit) : `<input class="unit-input" type="text" value="${escapeHtml(p.unit)}" id="unit-input-${id}" />`;
   }
-  function renderEmojiBlock(id) {
+    function renderEmojiBlock(id) {
     const p = PRODUCTS.find((x) => x.id === id);
     const el = document.getElementById("emoji-block-" + id);
     if (p.photo) {
-      el.innerHTML = `<img class="photo-thumb" src="${p.photo}" alt="${p.name}">`;
+      el.innerHTML = `<img class="photo-thumb" src="${p.photo}" alt="${escapeHtml(p.name)}">`;
     } else {
-      el.innerHTML = !adminUnlocked ? p.emoji : `<input class="emoji-input" type="text" value="${p.emoji}" id="emoji-input-${id}" maxlength="4" />`;
+      el.innerHTML = !adminUnlocked ? escapeHtml(p.emoji) : `<input class="emoji-input" type="text" value="${escapeHtml(p.emoji)}" id="emoji-input-${id}" maxlength="4" />`;
     }
   }
   function renderPhotoControls(id) {
@@ -883,8 +890,8 @@
       : entries.map(([id, qty]) => {
           const p = PRODUCTS.find((x) => x.id === id);
           return `<div class="line-item">
-            <div class="line-emoji">${p.photo ? `<img src="${p.photo}" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">` : p.emoji}</div>
-            <div class="line-info"><div class="line-name">${p.name}</div><div class="line-sub">${qty} × ₹${p.price}</div></div>
+            <div class="line-emoji">${p.photo ? `<img src="${p.photo}" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">` : escapeHtml(p.emoji)}</div>
+            <div class="line-info"><div class="line-name">${escapeHtml(p.name)}</div><div class="line-sub">${qty} × ₹${p.price}</div></div>
             <div class="line-total">₹${p.price * qty}</div>
           </div>`;
         }).join("");
@@ -957,7 +964,7 @@
   }
 
   function printInvoice(billEntry) {
-    const rows = billEntry.items.map((it) => `<tr><td>${it.name}${it.unit ? ` <span style="color:#888;">(${it.unit})</span>` : ""}</td><td>${it.qty}</td><td>₹${it.price}</td><td>₹${it.qty * it.price}</td></tr>`).join("");
+    const rows = billEntry.items.map((it) => `<tr><td>${escapeHtml(it.name)}${it.unit ? ` <span style="color:#888;">(${escapeHtml(it.unit)})</span>` : ""}</td><td>${it.qty}</td><td>₹${it.price}</td><td>₹${it.qty * it.price}</td></tr>`).join("");
     document.getElementById("print-invoice").innerHTML = `
       <h2>${SHOP_NAME}</h2>
       <div class="pi-address">${SHOP_ADDRESS}<br>Mobile No: ${SHOP_MOBILE}</div>
@@ -1018,7 +1025,7 @@
     let html = "";
     categoryOrder.forEach((key) => {
       const cat = displayNameByKey[key];
-      html += `<div class="category-section"><div class="category-title">${cat}</div></div><div class="grid">`;
+      html += `<div class="category-section"><div class="category-title">${escapeHtml(cat)}</div></div><div class="grid">`;
       html += byCategory[key].sort((a, b) => a.addedAt - b.addedAt).map((p) => `
         <div class="card">
           <div class="emoji" id="emoji-block-${p.id}"></div>
